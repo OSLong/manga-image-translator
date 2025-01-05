@@ -17,15 +17,18 @@ import httpx
 setattr(httpcore, 'SyncHTTPTransport', any)
 from httpx import Timeout
 
+import googletrans
+import re
+import asyncio
 from googletrans import urls, utils
 from googletrans.gtoken import TokenAcquirer
 from googletrans.constants import (
     DEFAULT_CLIENT_SERVICE_URLS,
-    DEFAULT_FALLBACK_SERVICE_URLS,
+    # DEFAULT_FALLBACK_SERVICE_URLS,
     DEFAULT_USER_AGENT, LANGCODES, LANGUAGES, SPECIAL_CASES,
     DEFAULT_RAISE_EXCEPTION, DUMMY_DATA
 )
-from googletrans.models import Translated, Detected, TranslatedPart
+from googletrans.models import Translated, Detected
 
 from .common import CommonTranslator
 from .keys import OPENAI_HTTP_PROXY
@@ -126,7 +129,7 @@ class GoogleTranslator(CommonTranslator):
             self.client.timeout = timeout
 
         if use_fallback:
-            self.service_urls = DEFAULT_FALLBACK_SERVICE_URLS
+            # self.service_urls = DEFAULT_FALLBACK_SERVICE_URLS
             self.client_type = 'gtx'
             pass
         else:
@@ -139,31 +142,57 @@ class GoogleTranslator(CommonTranslator):
         self.raise_exception = raise_exception
 
     async def _translate(self, from_lang: str, to_lang: str, queries: List[str]) -> List[str]:
+        
+        query = '\n'.join(queries)
 
-        # Separate en/ja queries to improve translation quality
-        langs = ['en', 'ja']
-        langid.set_languages(langs)
-        lang_to_queries = {l: [] for l in langs}
-        result = []
-        for i, query in enumerate(queries):
-            detected_lang = langid.classify(query)[0]
-            lang_to_queries[detected_lang].append(query)
-            result.append(detected_lang)
-        langid.set_languages(None)
+        async def random_delay():
+            delay_ms = random.randrange(200, 500 )
+            await asyncio.sleep(delay=delay_ms / 1000)
 
-        lang_to_translation = {}
-        for lang, lang_queries in lang_to_queries.items():
-            if lang_queries:
-                translation = await self._translate_query(from_lang, to_lang, '\n'.join(lang_queries))
-                lang_to_translation[lang] = [] if not translation else translation.text.split('\n')
+        def split_lines_for_better_translate(text: str):
+            pattern = "(」)" 
+            matched = re.finditer(pattern, text)
+            to_added_new_line_index = [ m.end() for m in matched]
+            to_added_new_line_index.reverse()
+            for index in to_added_new_line_index:
+                # insert new line
+                text = text[:index] + '\n' + text[index:]
+            return text
+            
+            
+        query = split_lines_for_better_translate(query)
+        
+        translator = googletrans.Translator()
+        result = await translator.translate(text=query, dest=to_lang)
+        await random_delay()
 
-        for i, lang in enumerate(result):
-            if len(lang_to_translation[lang]) > 0:
-                result[i] = lang_to_translation[lang].pop(0)
-            else: # Server has translated incorrectly
-                result[i] = ''
+        result.text = ''.join(result.text.split('\n'))
+        
+        return [result.text]
+        # # Separate en/ja queries to improve translation quality
+        # langs = ['en', 'ja']
+        # langid.set_languages(langs)
+        # lang_to_queries = {l: [] for l in langs}
+        # result = []
+        # for i, query in enumerate(queries):
+        #     detected_lang = langid.classify(query)[0]
+        #     lang_to_queries[detected_lang].append(query)
+        #     result.append(detected_lang)
+        # langid.set_languages(None)
 
-        return [text.strip() for text in result]
+        # lang_to_translation = {}
+        # for lang, lang_queries in lang_to_queries.items():
+        #     if lang_queries:
+        #         translation = await self._translate_query(from_lang, to_lang, '\n'.join(lang_queries))
+        #         lang_to_translation[lang] = [] if not translation else translation.text.split('\n')
+
+        # for i, lang in enumerate(result):
+        #     if len(lang_to_translation[lang]) > 0:
+        #         result[i] = lang_to_translation[lang].pop(0)
+        #     else: # Server has translated incorrectly
+        #         result[i] = ''
+
+        # return [text.strip() for text in result]
 
     async def _translate_query(self, from_lang: str, to_lang: str, query: str) -> Translated:
         if not query:

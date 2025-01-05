@@ -81,6 +81,8 @@ async def dispatch(args: Namespace):
 
 if __name__ == '__main__':
     args = None
+    import datetime
+    start = datetime.datetime.now()
     init_logging()
     try:
         args, unknown = parser.parse_known_args()
@@ -92,6 +94,10 @@ if __name__ == '__main__':
             logger.debug(args)
 
         asyncio.run(dispatch(args))
+
+        end = datetime.datetime.now()
+
+        print("used time is ", str(end - start), flush=True)
     except KeyboardInterrupt:
         if not args or args.mode != 'web':
             print()

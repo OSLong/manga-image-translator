@@ -99,8 +99,8 @@ class Model32pxOCR(OfflineOCR):
             with torch.no_grad():
                 ret = self.model.infer_beam_batch(image_tensor, widths, beams_k = 5, max_seq_length = 255)
             for i, (pred_chars_index, prob, fr, fg, fb, br, bg, bb) in enumerate(ret):
-                if prob < 0.7:
-                    continue
+                # if prob < 0.7:
+                #     continue
                 fr = (torch.clip(fr.view(-1), 0, 1).mean() * 255).long().item()
                 fg = (torch.clip(fg.view(-1), 0, 1).mean() * 255).long().item()
                 fb = (torch.clip(fb.view(-1), 0, 1).mean() * 255).long().item()

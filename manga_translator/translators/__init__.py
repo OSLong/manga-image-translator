@@ -5,7 +5,7 @@ import py3langid as langid
 from .common import *
 from .baidu import BaiduTranslator
 from .deepseek import DeepseekTranslator
-# from .google import GoogleTranslator
+from .google import GoogleTranslator
 from .youdao import YoudaoTranslator
 from .deepl import DeeplTranslator
 from .papago import PapagoTranslator
@@ -40,7 +40,7 @@ OFFLINE_TRANSLATORS = {
 }
 
 TRANSLATORS = {
-    # 'google': GoogleTranslator,
+    'google': GoogleTranslator,
     Translator.youdao: YoudaoTranslator,
     Translator.baidu: BaiduTranslator,
     Translator.deepl: DeeplTranslator,
