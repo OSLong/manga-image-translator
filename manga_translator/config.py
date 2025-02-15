@@ -153,7 +153,7 @@ class RenderConfig(BaseModel):
     """Disable font border"""
     font_size_offset: int = 0
     """Offset font size by a given amount, positive number increase font size and vice versa"""
-    font_size_minimum: int = -1
+    font_size_minimum: int = 20
     """Minimum output font size. Default is image_sides_sum/200"""
     direction: Direction = Direction.auto
     """Force text to be rendered horizontally/vertically/none"""

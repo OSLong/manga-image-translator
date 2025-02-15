@@ -156,19 +156,26 @@ class GoogleTranslator(CommonTranslator):
             to_added_new_line_index.reverse()
             for index in to_added_new_line_index:
                 # insert new line
-                text = text[:index] + '\n' + text[index:]
+                text = text[:index] + ',,,,' + text[index:]
             return text
             
-            
+#         print(f"""
+#     Wire sssssssssssssss
+#               ===============
+#               {queries}
+# """)
+#         raise
         query = split_lines_for_better_translate(query)
         
         translator = googletrans.Translator()
         result = await translator.translate(text=query, dest=to_lang)
-        await random_delay()
+        # await random_delay()
 
-        result.text = ''.join(result.text.split('\n'))
+        result.text = result.text.replace(',,,,', '')
+
+        # result.text = ''.join(result.text.split('\n'))
         
-        return [result.text]
+        return result.text.split('\n')
         # # Separate en/ja queries to improve translation quality
         # langs = ['en', 'ja']
         # langid.set_languages(langs)
