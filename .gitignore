@@ -18,6 +18,7 @@ Scripts
 Lib
 include
 share
+.DS_Store
 
 # Distribution / packaging
 .Python
@@ -45,4 +46,9 @@ MANIFEST
 /input/
 /input-translated/
 
+
 /test*
+# SSL Used for running server locally
+cert.pem
+key.pem
+
